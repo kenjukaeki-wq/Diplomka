@@ -10,7 +10,6 @@ from .services import create_telegram_token
 
 
 def register(request):
-    """Показать регистрацию; после POST создать пользователя и войти."""
     if request.user.is_authenticated:
         return redirect("dashboard")
     form = RegisterForm(request.POST or None)
@@ -23,7 +22,6 @@ def register(request):
 
 @login_required
 def profile(request):
-    """Показать или сохранить имя и контакты пользователя."""
     form = ProfileForm(request.POST or None, instance=request.user)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -45,7 +43,6 @@ def profile(request):
 @login_required
 @require_POST
 def telegram_connect(request):
-    """Создать одноразовую ссылку на бота для текущего аккаунта."""
     if not settings.TELEGRAM_BOT_TOKEN or not settings.TELEGRAM_BOT_USERNAME:
         messages.error(request, "Бот ещё не настроен в .env.")
         return redirect("profile")

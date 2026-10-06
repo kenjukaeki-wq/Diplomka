@@ -12,7 +12,6 @@ def invitation_code():
 
 
 def private_upload(instance, filename):
-    # Не используем присланные имена как пути файлов.
     return f"{instance._meta.app_label}/{uuid.uuid4().hex}{Path(filename).suffix.lower()[:12]}"
 
 

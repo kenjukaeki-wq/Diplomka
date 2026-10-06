@@ -1,5 +1,3 @@
-"""Фоновый процесс: напоминания, закрытие посещений, отправка Telegram."""
-
 from datetime import timedelta
 
 from asgiref.sync import sync_to_async
@@ -17,7 +15,6 @@ from .services import notify
 
 
 def create_reminders():
-    """Команда runworker вызывает эту функцию раз в 30 секунд."""
     now = timezone.now()
     lessons = Lesson.objects.filter(
         status="scheduled",
@@ -61,7 +58,6 @@ def create_reminders():
         last_activity__lt=now - timedelta(seconds=90),
     )
     for session in inactive_sessions:
-        # Не закрываем запись, если за это время пришёл новый heartbeat.
         StudentLessonSession.objects.filter(
             pk=session.pk,
             left_at__isnull=True,
@@ -71,7 +67,6 @@ def create_reminders():
 
 @transaction.atomic
 def claim_delivery():
-    """Взять следующее сообщение, чтобы два worker не отправили его одновременно."""
     now = timezone.now()
     ready = Q(status="pending", next_attempt_at__lte=now)
     abandoned = Q(status="sending", locked_at__lt=now - timedelta(minutes=5))
@@ -119,7 +114,6 @@ def finish_delivery(delivery_id, attempt, status, error="", delay=0):
 
 
 async def send_pending(bot, limit=100):
-    """Telegram работает асинхронно, а обычные функции ORM вызываются через адаптер."""
     for _ in range(limit):
         claim = await sync_to_async(claim_delivery)()
         if claim is None:
@@ -144,7 +138,6 @@ async def send_pending(bot, limit=100):
             error = "Telegram просит подождать"
             delay = exception.retry_after + 1
         except Exception as exception:
-            # В текст сетевой ошибки может попасть токен, поэтому храним только её тип.
             error = type(exception).__name__
             status = "pending"
             if attempts >= 5:

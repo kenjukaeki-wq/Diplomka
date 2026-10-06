@@ -1,4 +1,4 @@
-"""Сдача и проверка работ. Все правила этих действий находятся здесь."""
+
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -20,7 +20,6 @@ def announce_assignment(assignment):
 
 @transaction.atomic
 def submit(user, assignment_id, text, file=None, clear_file=False):
-    # Та же блокировка используется при проверке: ответ и оценка не перезапишут друг друга.
     assignment = (
         Assignment.objects.select_for_update()
         .select_related("group")
@@ -76,7 +75,6 @@ def grade(user, submission_id, score, feedback):
     submission.full_clean()
     submission.save()
 
-    # При исправлении оценки revision меняется: ученик получает новое уведомление.
     notify(
         submission.student,
         f"Работа «{assignment.title}» проверена. Оценка: {score}/{assignment.max_score}.",

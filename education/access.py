@@ -4,14 +4,12 @@ from .models import StudyGroup
 
 
 def groups_for(user):
-    """Вернуть группы, которые пользователь ведёт или посещает."""
     return StudyGroup.objects.filter(
         Q(teacher=user) | Q(memberships__student=user)
     ).distinct()
 
 
 def can_access(user, group):
-    """Вернуть True, если пользователь — преподаватель или ученик группы."""
     return user.is_authenticated and (
         group.teacher_id == user.pk or group.memberships.filter(student=user).exists()
     )

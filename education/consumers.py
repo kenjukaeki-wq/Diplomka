@@ -1,4 +1,3 @@
-"""Consumer похож на view, но обслуживает открытое WebSocket-соединение."""
 
 import json
 
@@ -25,7 +24,7 @@ class LessonConsumer(JsonWebsocketConsumer):
             self.close(code=4403)
             return
 
-        # Группа рассылки Channels — это подписки соединений, а не таблица БД.
+
         self.joined_groups.append(f"lesson_{self.lesson_id}")
         if lesson.group.teacher_id == self.user.pk:
             self.joined_groups.append(f"lesson_{self.lesson_id}_teacher")
@@ -38,7 +37,7 @@ class LessonConsumer(JsonWebsocketConsumer):
         self.send_json(services.lesson_state(self.user, self.lesson_id))
 
     def receive(self, text_data=None, bytes_data=None, **kwargs):
-        """Разбираем JSON. Ошибка сообщения не должна ломать соединение."""
+
         if not text_data or len(text_data) > 8192:
             self.send_json(
                 {"event": "error", "text": "Слишком большое или пустое сообщение."}
@@ -52,7 +51,6 @@ class LessonConsumer(JsonWebsocketConsumer):
         self.receive_json(data)
 
     def receive_json(self, data, **kwargs):
-        """Выбираем действие по полю action из сообщения браузера."""
         try:
             if not isinstance(data, dict):
                 raise ValidationError("Ожидается объект JSON.")
@@ -88,7 +86,6 @@ class LessonConsumer(JsonWebsocketConsumer):
             self.send_json({"event": "error", "text": "Некорректные данные."})
 
     def event(self, event):
-        """Redis передал событие: отправляем его в браузер."""
         lesson = (
             Lesson.objects.select_related("group").filter(pk=self.lesson_id).first()
         )
@@ -98,7 +95,6 @@ class LessonConsumer(JsonWebsocketConsumer):
         self.send_json(event["payload"])
 
     def disconnect(self, code):
-        """Браузер отключился: закрываем посещение и подписки."""
         services.close_session(self.channel_name)
         for group_name in getattr(self, "joined_groups", []):
             async_to_sync(self.channel_layer.group_discard)(

@@ -1,4 +1,4 @@
-"""Два вида соединений: страницы HTTP и события WebSocket."""
+
 
 import os
 
@@ -6,7 +6,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 from django.core.asgi import get_asgi_application
 
-# Сначала запускаем Django, затем импортируем код, использующий модели.
+
 http_application = get_asgi_application()
 
 from django.conf import settings
@@ -18,8 +18,6 @@ from channels.security.websocket import AllowedHostsOriginValidator
 from education.consumers import LessonConsumer
 from notifications.consumers import NotificationConsumer
 
-# При локальном запуске CSS и JS раздаёт Django, без WhiteNoise.
-# На публичном сервере при DEBUG=0 статику раздаёт отдельный веб-сервер.
 if settings.DEBUG:
     http_application = ASGIStaticFilesHandler(http_application)
 

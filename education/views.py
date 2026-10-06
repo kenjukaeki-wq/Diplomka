@@ -21,7 +21,6 @@ from assignments.models import Assignment
 
 @login_required
 def dashboard(request):
-    """Главная страница: группы, ближайшие занятия и задания."""
     groups = groups_for(request.user).select_related("teacher")
     lessons = (
         Lesson.objects.filter(group__in=groups)
@@ -41,7 +40,6 @@ def dashboard(request):
 
 @login_required
 def group_create(request):
-    """Создать группу; преподавателя назначаем из request.user."""
     require_teacher(request.user)
     form = GroupForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -54,7 +52,6 @@ def group_create(request):
 
 @login_required
 def group_join(request):
-    """Найти группу по коду и записать ученика в участники."""
     if request.user.is_teacher:
         raise PermissionDenied("Вступление по коду доступно ученикам.")
     form = JoinForm(request.POST or None)
@@ -107,7 +104,6 @@ def group_rotate_code(request, pk):
 
 @login_required
 def lesson_create(request, group_id):
-    """Создать занятие по заполненной Django-форме."""
     group = get_object_or_404(StudyGroup, pk=group_id)
     require_teacher(request.user, group)
     form = LessonForm(request.POST or None, instance=Lesson(group=group))
@@ -121,7 +117,6 @@ def lesson_create(request, group_id):
 
 @login_required
 def lesson_detail(request, pk):
-    """Показать занятие и начальные данные для JavaScript."""
     lesson = get_object_or_404(Lesson.objects.select_related("group"), pk=pk)
     require_access(request.user, lesson.group)
     return render(
@@ -141,7 +136,6 @@ def lesson_detail(request, pk):
 
 @login_required
 def lesson_snapshot(request, pk):
-    """Вернуть состояние занятия в JSON без HTML."""
     lesson = get_object_or_404(Lesson.objects.select_related("group"), pk=pk)
     require_access(request.user, lesson.group)
     return JsonResponse(lesson_state(request.user, pk))
@@ -150,7 +144,6 @@ def lesson_snapshot(request, pk):
 @login_required
 @require_POST
 def lesson_action(request, pk, action):
-    """Принять POST от кнопки и вызвать функцию смены статуса."""
     get_object_or_404(Lesson, pk=pk)
     try:
         change_lesson_status(request.user, pk, action)
@@ -161,7 +154,6 @@ def lesson_action(request, pk, action):
 
 @login_required
 def material_create(request, group_id, lesson_id=None):
-    """Сохранить файл или ссылку для группы либо занятия."""
     group = get_object_or_404(StudyGroup, pk=group_id)
     require_teacher(request.user, group)
     lesson = get_object_or_404(Lesson, pk=lesson_id, group=group) if lesson_id else None
@@ -181,7 +173,6 @@ def material_create(request, group_id, lesson_id=None):
 
 
 def file_response(file):
-    """Отдать файл как скачивание, а не как исполняемый HTML."""
     response = FileResponse(
         file.open("rb"),
         as_attachment=True,
@@ -195,7 +186,6 @@ def file_response(file):
 
 @login_required
 def material_download(request, pk):
-    """Проверить членство в группе и отдать её материал."""
     item = get_object_or_404(Material.objects.select_related("group"), pk=pk)
     require_access(request.user, item.group)
     if not item.file:
@@ -207,7 +197,6 @@ def material_download(request, pk):
 
 @login_required
 def poll_create(request, lesson_id):
-    """Проверить форму опроса и передать вопрос в services."""
     lesson = get_object_or_404(Lesson.objects.select_related("group"), pk=lesson_id)
     require_teacher(request.user, lesson.group)
     form = PollForm(request.POST or None)
@@ -230,7 +219,6 @@ def poll_create(request, lesson_id):
 @login_required
 @require_POST
 def poll_close(request, lesson_id, pk):
-    """Завершить опрос по POST-запросу преподавателя."""
     get_object_or_404(Lesson, pk=lesson_id)
     close_poll(request.user, lesson_id, pk)
     return redirect("lesson_detail", pk=lesson_id)
@@ -238,7 +226,6 @@ def poll_close(request, lesson_id, pk):
 
 @login_required
 def attendance(request, pk):
-    """Показать преподавателю отчёт по времени присутствия."""
     lesson = get_object_or_404(Lesson.objects.select_related("group"), pk=pk)
     require_teacher(request.user, lesson.group)
     return render(

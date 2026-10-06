@@ -8,7 +8,7 @@ from .models import User, TelegramToken, TelegramLink
 
 
 def create_telegram_token(user):
-    """Сгенерировать случайную ссылку на 10 минут; хранить только её хеш."""
+    """Сгенериь случайную ссылку на 10 мин"""
     token = secrets.token_urlsafe(24)
     TelegramToken.objects.update_or_create(
         user=user,
@@ -22,7 +22,6 @@ def create_telegram_token(user):
 
 @transaction.atomic
 def link_telegram(token, chat_id):
-    """По одноразовой ссылке связать Telegram с нужным пользователем."""
     item = (
         TelegramToken.objects.select_for_update()
         .filter(

@@ -14,7 +14,6 @@ from .services import announce_assignment, submit, grade
 
 @login_required
 def assignment_create(request, group_id):
-    """Сохранить задание и файл, затем уведомить учеников."""
     group = get_object_or_404(StudyGroup, pk=group_id)
     require_teacher(request.user, group)
     form = AssignmentForm(
